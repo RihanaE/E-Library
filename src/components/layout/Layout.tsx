@@ -10,7 +10,7 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 overflow-x-clip break-words whitespace-normal">{children}</main>
       <Footer />
     </div>
   );

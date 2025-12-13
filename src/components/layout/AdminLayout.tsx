@@ -8,7 +8,6 @@ import {
   BookOpen,
   Users,
   Star,
-  Settings,
   Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -74,7 +73,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 overflow-auto">{children}</main>
       </div>
       <Footer />
     </div>

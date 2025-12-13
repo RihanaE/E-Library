@@ -35,7 +35,7 @@ const App = () => (
             <Route path="/about" element={<Layout><About /></Layout>} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-            <Route path="/admin/upload" element={<AdminLayout><UploadBook /></AdminLayout>} />
+            <Route path="/admin/books/new" element={<AdminLayout><UploadBook /></AdminLayout>} />
             <Route path="/admin/books" element={<AdminLayout><ManageBooks /></AdminLayout>} />
             <Route path="/admin/users" element={<AdminLayout><ManageUsers /></AdminLayout>} />
             <Route path="*" element={<NotFound />} />

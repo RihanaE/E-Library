@@ -160,7 +160,7 @@ export default function AboutPage() {
               </div>
             </div>
 
-            <Link to="/register">
+            <Link to="/auth">
               <Button variant="default" size="lg" className="gap-2">
                 Get Started Today
                 <ArrowRight className="h-4 w-4" />

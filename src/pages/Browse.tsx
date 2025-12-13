@@ -1,15 +1,14 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BookCard, Book } from "@/components/books/BookCard";
-import { SectionHeader } from "@/components/ui/section-header";
+
 import {
   Search,
-  SlidersHorizontal,
   Grid3X3,
   List,
-  ChevronDown,
 } from "lucide-react";
 import {
   Select,
@@ -18,150 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-// Import book covers
-import gatsbyBook from "@/assets/books/gatsby.jpg";
-import physicsBook from "@/assets/books/physics.jpg";
-import mathBook from "@/assets/books/mathematics.jpg";
-import hamletBook from "@/assets/books/hamlet.jpg";
-import historyBook from "@/assets/books/history.jpg";
-import biologyBook from "@/assets/books/biology.jpg";
-
-// Extended mock data
-const allBooks: Book[] = [
-  {
-    id: "1",
-    title: "The Great Gatsby",
-    author: "F. Scott Fitzgerald",
-    cover: gatsbyBook,
-    category: "Literature",
-    rating: 4.8,
-    reviewCount: 342,
-    available: true,
-    gradeLevel: "11-12",
-  },
-  {
-    id: "2",
-    title: "Advanced Physics",
-    author: "Dr. Sarah Mitchell",
-    cover: physicsBook,
-    category: "Science",
-    rating: 4.6,
-    reviewCount: 189,
-    available: true,
-    gradeLevel: "10-12",
-  },
-  {
-    id: "3",
-    title: "Calculus Fundamentals",
-    author: "Prof. James Wilson",
-    cover: mathBook,
-    category: "Mathematics",
-    rating: 4.5,
-    reviewCount: 256,
-    available: false,
-    gradeLevel: "11-12",
-  },
-  {
-    id: "4",
-    title: "Hamlet",
-    author: "William Shakespeare",
-    cover: hamletBook,
-    category: "Drama",
-    rating: 4.9,
-    reviewCount: 421,
-    available: true,
-    gradeLevel: "10-12",
-  },
-  {
-    id: "5",
-    title: "World History",
-    author: "Dr. Emily Chen",
-    cover: historyBook,
-    category: "History",
-    rating: 4.7,
-    reviewCount: 178,
-    available: true,
-    gradeLevel: "9-12",
-  },
-  {
-    id: "6",
-    title: "Biology Essentials",
-    author: "Dr. Michael Brown",
-    cover: biologyBook,
-    category: "Science",
-    rating: 4.4,
-    reviewCount: 203,
-    available: true,
-    gradeLevel: "9-10",
-  },
-  {
-    id: "7",
-    title: "Chemistry Today",
-    author: "Prof. Lisa Anderson",
-    cover: biologyBook,
-    category: "Science",
-    rating: 4.3,
-    reviewCount: 156,
-    available: true,
-    gradeLevel: "10-11",
-  },
-  {
-    id: "8",
-    title: "Algebra Mastery",
-    author: "Dr. Robert Lee",
-    cover: mathBook,
-    category: "Mathematics",
-    rating: 4.6,
-    reviewCount: 198,
-    available: false,
-    gradeLevel: "9-10",
-  },
-  {
-    id: "9",
-    title: "Pride and Prejudice",
-    author: "Jane Austen",
-    cover: gatsbyBook,
-    category: "Literature",
-    rating: 4.7,
-    reviewCount: 312,
-    available: true,
-    gradeLevel: "10-12",
-  },
-  {
-    id: "10",
-    title: "Ancient Civilizations",
-    author: "Dr. Maria Garcia",
-    cover: historyBook,
-    category: "History",
-    rating: 4.5,
-    reviewCount: 145,
-    available: true,
-    gradeLevel: "9-10",
-  },
-  {
-    id: "11",
-    title: "Quantum Physics",
-    author: "Prof. David Kim",
-    cover: physicsBook,
-    category: "Science",
-    rating: 4.8,
-    reviewCount: 167,
-    available: true,
-    gradeLevel: "12",
-  },
-  {
-    id: "12",
-    title: "Macbeth",
-    author: "William Shakespeare",
-    cover: hamletBook,
-    category: "Drama",
-    rating: 4.6,
-    reviewCount: 289,
-    available: true,
-    gradeLevel: "11-12",
-  },
-];
 
 const categories = [
   "All Categories",
@@ -184,30 +39,115 @@ const gradeLevels = [
 ];
 
 export default function BrowsePage() {
+  const location = useLocation();
+  const [allBooks, setAllBooks] = useState<Book[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedGrade, setSelectedGrade] = useState("All Grades");
   const [sortBy, setSortBy] = useState("popular");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const CATEGORY_MAP: Record<string, string> = {
+  literature: "Literature",
+  science: "Science",
+  mathematics: "Mathematics",
+  history: "History",
+  drama: "Drama",
+  "art-music": "Art & Music",
+  languages: "Languages",
+  technology: "Technology",
+};
 
-  // Filter books based on search and filters
+  useEffect(() => {
+  const params = new URLSearchParams(location.search);
+
+  const search = params.get("search");
+  const categoryParam = params.get("category");
+
+  if (search) {
+    setSearchQuery(search);
+  }
+
+  if (categoryParam && CATEGORY_MAP[categoryParam]) {
+    setSelectedCategory(CATEGORY_MAP[categoryParam]);
+  } else {
+    setSelectedCategory("All Categories");
+  }
+}, [location.search]);
+
+
+
+  const fetchBooks = async () => {
+    setIsLoading(true);
+    try {
+     
+      let query = supabase
+        .from("books")
+        .select(
+          `
+            id,
+            title,
+            author,
+            cover_url,
+            available,
+            grade_level,
+            rating:reviews(rating), 
+            reviewCount:reviews(count),
+            categories(name)
+          `
+        )
+        // 4. Sort by newest by default
+        .order("created_at", { ascending: false });
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      const booksData = data.map((book) => ({
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        cover: book.cover_url || "/placeholder-cover.jpg", 
+        category: (book.categories as { name: string } | null)?.name || "N/A",
+        rating: 4.5, 
+        reviewCount: 0, 
+        available: book.available,
+        gradeLevel: book.grade_level,
+      }));
+
+      setAllBooks(booksData as unknown as Book[]);
+    } catch (error) {
+      console.error("Error fetching books:", error);
+      console.error("Failed to load books from the server.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBooks();
+  }, []);
+
   const filteredBooks = allBooks.filter((book) => {
-    const matchesSearch =
-      book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      book.author.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory =
+    const searchMatch = book.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+    const categoryMatch =
       selectedCategory === "All Categories" ||
       book.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+
+    return searchMatch && categoryMatch;
   });
 
-  // Sort books
+  
   const sortedBooks = [...filteredBooks].sort((a, b) => {
     switch (sortBy) {
       case "rating":
         return b.rating - a.rating;
       case "newest":
-        return 0; // Would need date field
+        return 0; 
       case "title":
         return a.title.localeCompare(b.title);
       default:
@@ -228,7 +168,7 @@ export default function BrowsePage() {
           </p>
         </div>
 
-        {/* Search and Filters */}
+        
         <div className="bg-card rounded-2xl p-4 md:p-6 shadow-md border border-border/50 mb-8">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search Input */}
@@ -236,7 +176,7 @@ export default function BrowsePage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search by title, author, ISBN..."
+                placeholder="Search by title"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-12 h-12"
@@ -245,7 +185,10 @@ export default function BrowsePage() {
 
             {/* Filters */}
             <div className="flex flex-wrap gap-3">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
                 <SelectTrigger className="w-[180px] h-12">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
@@ -288,7 +231,9 @@ export default function BrowsePage() {
           {/* Active Filters */}
           {(selectedCategory !== "All Categories" || searchQuery) && (
             <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-border/50">
-              <span className="text-sm text-muted-foreground">Active filters:</span>
+              <span className="text-sm text-muted-foreground">
+                Active filters:
+              </span>
               {searchQuery && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
                   "{searchQuery}"
@@ -318,7 +263,11 @@ export default function BrowsePage() {
         {/* Results Header */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-muted-foreground">
-            Showing <span className="font-medium text-foreground">{sortedBooks.length}</span> results
+            Showing{" "}
+            <span className="font-medium text-foreground">
+              {sortedBooks.length}
+            </span>{" "}
+            results
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -351,7 +300,10 @@ export default function BrowsePage() {
               <div
                 key={book.id}
                 className="opacity-0 animate-fade-in"
-                style={{ animationDelay: `${index * 50}ms`, animationFillMode: "forwards" }}
+                style={{
+                  animationDelay: `${index * 50}ms`,
+                  animationFillMode: "forwards",
+                }}
               >
                 <BookCard book={book} />
               </div>
@@ -366,7 +318,8 @@ export default function BrowsePage() {
               No books found
             </h3>
             <p className="text-muted-foreground mb-6">
-              Try adjusting your search or filters to find what you're looking for.
+              Try adjusting your search or filters to find what you're looking
+              for.
             </p>
             <Button
               variant="outline"

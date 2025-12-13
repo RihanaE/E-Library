@@ -13,6 +13,15 @@ export interface Book {
   reviewCount: number;
   available: boolean;
   gradeLevel?: string;
+  description?: string;
+  pages?: any;
+  publishDate?: any;
+  borrowDuration?: any;
+  totalBorrows?: any;
+  isbn?: any;
+  publisher?: string;
+  language?: string;
+  subjects?: [string];
 }
 
 interface BookCardProps {

@@ -37,6 +37,12 @@ export function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, signOut } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = () => {
+    if (!searchQuery.trim()) return;
+    navigate(`/browse?search=${encodeURIComponent(searchQuery.trim())}`);
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -97,7 +103,12 @@ export function Header() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search books, authors, subjects..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch();
+              }}
+              placeholder="Search books..."
               className="pl-10 h-10 bg-muted/50 border-transparent focus:bg-background"
             />
           </div>
@@ -110,7 +121,10 @@ export function Header() {
             variant="ghost"
             size="icon"
             className="lg:hidden"
-            onClick={() => setIsSearchOpen(!isSearchOpen)}
+            onClick={() => {
+              setIsSearchOpen(!isSearchOpen);
+              handleSearch();
+            }}
           >
             <Search className="h-5 w-5" />
           </Button>
@@ -145,13 +159,19 @@ export function Header() {
                   <DropdownMenuSeparator />
                   {isAdmin && (
                     <DropdownMenuItem asChild>
-                      <Link to="/admin" className="flex items-center gap-2 cursor-pointer">
+                      <Link
+                        to="/admin"
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
                         <Settings className="h-4 w-4" />
                         Admin Dashboard
                       </Link>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className="cursor-pointer"
+                  >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
                   </DropdownMenuItem>
@@ -197,7 +217,7 @@ export function Header() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search books, authors, subjects..."
+              placeholder="Search books..."
               className="pl-10"
               autoFocus
             />

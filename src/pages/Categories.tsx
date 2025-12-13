@@ -1,6 +1,4 @@
-import { Link } from "react-router-dom";
 import { CategoryCard } from "@/components/books/CategoryCard";
-import { SectionHeader } from "@/components/ui/section-header";
 import {
   BookOpen,
   Microscope,
@@ -25,7 +23,7 @@ const allCategories = [
   { name: "Science", icon: Microscope, bookCount: 324, href: "/browse?category=science", color: "#3b82f6" },
   { name: "Mathematics", icon: Calculator, bookCount: 189, href: "/browse?category=mathematics", color: "#8b5cf6" },
   { name: "History", icon: Globe, bookCount: 245, href: "/browse?category=history", color: "#f59e0b" },
-  { name: "Art", icon: Palette, bookCount: 98, href: "/browse?category=art", color: "#ec4899" },
+  { name: "Art & Music", icon: Palette, bookCount: 98, href: "/browse?category=art-music", color: "#ec4899" },
   { name: "Music", icon: Music, bookCount: 58, href: "/browse?category=music", color: "#f43f5e" },
   { name: "Technology", icon: Code, bookCount: 134, href: "/browse?category=technology", color: "#6366f1" },
   { name: "Chemistry", icon: Beaker, bookCount: 98, href: "/browse?category=chemistry", color: "#f97316" },
