@@ -1,73 +1,68 @@
-# Welcome to your Lovable project
+🚀 Supabase Setup Guide
+This guide details the steps required to connect your project to your Supabase backend, including how to set up your environment variables securely.
 
-## Project info
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+1. Retrieve Your Supabase Credentials
+You need the Project URL and the Anon Public Key from your Supabase Dashboard.
 
-## How can I edit this code?
+Action: Log in to your Supabase project, navigate to Settings (⚙️) > API, and copy the two key values under Project Settings.
 
-There are several ways of editing your application.
+2. Configure Environment Variables
+For security and ease of configuration, all sensitive credentials must be stored in a local environment file.
 
-**Use Lovable**
+Filename: .env.local
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Location: The root directory of your project (alongside package.json).
 
-Changes made via Lovable will be committed automatically to this repo.
+How to Add: Because your project uses Vite (as evidenced by your package.json and tsconfig.app.json), all public environment variables used in the frontend code must be prefixed with VITE_.
 
-**Use your preferred IDE**
+Create the .env.local file and add your credentials using this format:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Code snippet
 
-The only requirement is having Bun installed - [install Bun](https://bun.sh/docs/installation)
+# .env.local
 
-Follow these steps:
+# REQUIRED: Your Supabase Project URL
+VITE_SUPABASE_URL="https://[YOUR_PROJECT_REF].supabase.co"
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# REQUIRED: Your Supabase Anon Public Key (safe for public use)
+VITE_SUPABASE_ANON_KEY="[YOUR_ANON_KEY]"
+Security Note: Ensure your .env.local file is listed in your project's .gitignore file to prevent sensitive keys from being committed to your repository.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. Initialize the Supabase Client
+The environment variables are consumed in a dedicated client file, which is then imported wherever you need to interact with the database.
 
-# Step 3: Install the necessary dependencies.
-bun install
+Filename: src/integrations/supabase/client.ts
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-bun run dev
-```
+Action: Ensure this file uses import.meta.env to securely access the variables and initialize the client:
 
-**Edit a file directly in GitHub**
+TypeScript
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+// Inside src/integrations/supabase/client.ts
 
-**Use GitHub Codespaces**
+import { createClient } from "@supabase/supabase-js";
+// ... import types
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-## What technologies are used for this project?
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Missing Supabase credentials in environment variables.");
+}
 
-This project is built with:
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+4. Construct the Database Schema
+To set up your tables, roles, and security policies, you must run the provided SQL script in the Supabase web interface.
 
-- Bun 1.3.4
-- Vite 7.2.7
-- TypeScript
-- React 19.2.1
-- shadcn-ui
-- Tailwind CSS
+Filename: 20251212121724_2c688d91-7726-43c3-9215-ab8475215335.sql
 
-## How can I deploy this project?
+Action:
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Go to your Supabase Project Dashboard.
 
-## Can I connect a custom domain to my Lovable project?
+Click the SQL Editor icon (</>) in the left sidebar.
 
-Yes, you can!
+Click "New Query".
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Copy the entire content of the 20251212121724_2c688d91-7726-43c3-9215-ab8475215335.sql file.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Paste the content into the SQL editor and click the "RUN" button to create your full database schema and RLS policies.
