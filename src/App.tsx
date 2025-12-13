@@ -17,6 +17,7 @@ import UploadBook from "./pages/admin/UploadBook";
 import ManageBooks from "./pages/admin/ManageBooks";
 import ManageUsers from "./pages/admin/ManageUsers";
 import NotFound from "./pages/NotFound";
+import ManageReviews from "./pages/admin/ManageReviews";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/admin/books/new" element={<AdminLayout><UploadBook /></AdminLayout>} />
             <Route path="/admin/books" element={<AdminLayout><ManageBooks /></AdminLayout>} />
             <Route path="/admin/users" element={<AdminLayout><ManageUsers /></AdminLayout>} />
+            <Route path="/admin/reviews" element={<AdminLayout><ManageReviews/></AdminLayout>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
