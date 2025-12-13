@@ -305,14 +305,52 @@ export default function BookDetailPage() {
       // 1️⃣ Prevent duplicate active borrow
       const { data: existingBorrow } = await supabase
         .from("borrows")
-        .select("id")
+        .select("id, due_at")
         .eq("user_id", user.id)
         .eq("book_id", book.id)
         .eq("status", "active")
         .maybeSingle();
 
       if (existingBorrow) {
-        toast.error("You already borrowed this book.");
+        const dueAt = new Date(existingBorrow.due_at);
+        const remainingSeconds = Math.floor(
+          (dueAt.getTime() - Date.now()) / 1000
+        );
+
+        if (remainingSeconds <= 0) {
+          toast.error("Your borrow period has expired.");
+          return;
+        }
+
+        const storagePath = extractStoragePath(book.file_url!);
+
+        const { data: signed, error: signedError } = await supabase.storage
+          .from("book-files")
+          .createSignedUrl(storagePath, remainingSeconds);
+
+        if (signedError || !signed?.signedUrl) {
+          toast.error("Failed to generate access link.");
+          return;
+        }
+
+        toast(
+          <div className="space-y-1 max-w-sm">
+            <p className="font-medium">You already borrowed this book</p>
+            <a
+              href={signed.signedUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline break-all"
+            >
+              Open book
+            </a>
+            <p className="text-xs text-muted-foreground">
+              Access expires on {dueAt.toLocaleDateString()}
+            </p>
+          </div>,
+          { duration: 12000 }
+        );
+
         return;
       }
 
@@ -457,7 +495,7 @@ export default function BookDetailPage() {
         </Link>
 
         {/* Book Header */}
-       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 mb-12">
           {/* Book Cover */}
           <div className="lg:col-span-1">
             <div className="lg:sticky lg:top-24">
