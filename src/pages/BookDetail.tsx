@@ -303,7 +303,7 @@ export default function BookDetailPage() {
 
     try {
       // 1️⃣ Prevent duplicate active borrow
-      const { data: existingBorrow } = await supabase
+      let { data: existingBorrow } = await supabase
         .from("borrows")
         .select("id, due_at")
         .eq("user_id", user.id)
@@ -318,8 +318,17 @@ export default function BookDetailPage() {
         );
 
         if (remainingSeconds <= 0) {
-          toast.error("Your borrow period has expired.");
-          return;
+          // Close expired borrow
+          await supabase
+            .from("borrows")
+            .update({
+              status: "returned",
+              returned_at: new Date().toISOString(),
+            })
+            .eq("id", existingBorrow.id);
+
+          // Treat as if no borrow exists
+          existingBorrow = null;
         }
 
         const storagePath = extractStoragePath(book.file_url!);
